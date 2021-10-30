@@ -8,6 +8,7 @@ function App() {
   const [branch, setbranch] = useState('main');
   const [repoInfo, setrepoInfo] = useState();
   const [isReadme, setisReadme] = useState();
+  const [issues, setissues] = useState();
 
   const [lastCommit, setlastCommit] = useState();
   const [WeeklyCommits, setWeeklyCommits] = useState();
@@ -15,8 +16,6 @@ function App() {
   const handleClick = () => {
     var a = document.createElement("a");
     a.setAttribute("href", url);
-    var protocol = a.protocol;
-    var domain = a.domain;
     var pathname = a.pathname;
 
     const owner = pathname.match(/(?<=\/)(.*?)(?=\/)/);
@@ -25,14 +24,13 @@ function App() {
     const repo = pathname.match(/^(?:\/(.+)){2}/);
     setrepo(repo[1]);
 
-    console.log("owner : ", owner[0]);
-    console.log("repo : ", repo[1]);
-
     fetchCommit(owner[0], repo[1]);
     fetchWeeklyCommits(owner[0], repo[1]);
     fetchIssues(owner[0], repo[1])
     fetchRepo(owner[0], repo[1]);
     fetchReadme(owner[0], repo[1])
+
+    console.log('issues : ', issues);
   };
 
   const fetchCommit = (owner, repo) => {
@@ -48,10 +46,21 @@ function App() {
     .then((data) => setWeeklyCommits(data.all[data.all.length - 1]))
   }
 
+  const filterIssue = (issues) => {
+    issues.map((issue) => {
+      if (!issue.hasOwnProperty('pull_request')) {
+        console.log('issue pull request : ',issue)
+        setissues([...issues, issue])
+      }
+    })
+  }
+
   const fetchIssues = (owner, repo) => {
     fetch(`https://api.github.com/repos/${owner}/${repo}/issues`)
     .then((data) => data.json())
-    .then((data) => console.log('issues : ',data))
+    // .then((data) => setissues(data))
+    // .then((data) => console.log(data))
+    .then((data) => filterIssue(data))
 
   }
 
@@ -59,6 +68,8 @@ function App() {
     fetch(`https://api.github.com/repos/${owner}/${repo}`)
     .then((data) => data.json())
     .then((data) => setrepoInfo(data.created_at))
+
+    console.log()
   }
 
   const fetchReadme = (owner, repo) => {
